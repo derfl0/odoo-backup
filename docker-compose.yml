@@ -1,0 +1,23 @@
+version: '2'
+services:
+  backup:
+    image: fbieringer/odoo-backup
+    restart: always
+    volumes:
+      - ./backup:/backup
+    environment:
+
+      # Use Backup dir to redirect backup directory
+      #- BACKUP_DIR=/backup
+
+      # Name of the odoo database you want to backup
+      - ODOO_DATABASE=odoo
+
+      # Master password for the instance
+      - ADMIN_PASSWORD=admin
+
+      # URL where your odoo is available
+      - URL=https://odoo.example.com
+
+      # Schedule for your backups
+      - SCHEDULE=*/30 * * * *
