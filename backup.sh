@@ -12,7 +12,7 @@ curl -s -X POST \
     ${URL}/web/database/backup
 
 # delete old backups
-if [ -v ${DELETE_AFTER} ] ; then
+if [ -n $DELETE_AFTER ]  && [ $DELETE_AFTER -gt 0 ] ; then
     echo "Deleting old backups"
     find ${BACKUP_DIR} -type f -mtime +${DELETE_AFTER} -name "${ODOO_DATABASE}.*.zip" -delete
 fi
@@ -20,7 +20,7 @@ fi
 echo "Finished backup"
 
 # If we want to restore the database as well
-if [ -v ${RESTORE_URL} ] ; then
+if [ -n $RESTORE_URL ] ; then
 
     echo "Restoring backup"
 
@@ -37,7 +37,7 @@ if [ -v ${RESTORE_URL} ] ; then
     # restore backup
     curl -s -X POST \
         -F "master_pwd=${RESTORE_ADMIN_PASSWORD}" \
-        -F backup_file=@${BACKUP_NAME} \
+        -F "backup_file=@${BACKUP_NAME}" \
         -F 'copy=true' \
         -F "name=${RESTORE_DATABASE}" \
         ${RESTORE_URL}/web/database/restore > /dev/null
