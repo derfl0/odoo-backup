@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ ! -n "$SCHEDULE" ]; then
+if [ ! -z "$SCHEDULE" ]; then
     echo "Renew crontab"
     echo "${SCHEDULE} /scripts/backup.sh" > /crontab.txt
     /usr/bin/crontab /crontab.txt
