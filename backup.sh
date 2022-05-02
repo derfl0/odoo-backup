@@ -17,13 +17,28 @@ function create_db_backup() {
 
     export PGPASSWORD="${DB_PASSWORD}"
 
+    mkdir ${BACKUP_FOLDER_NAME}
+
     pg_dump \
         --user ${DB_USER} \
         --host ${DB_HOST} \
-        ${ODOO_DATABASE} | zip ${BACKUP_NAME} -
+        ${ODOO_DATABASE} > ${BACKUP_FOLDER_NAME}/dump.sql
+
+    if [ -d "$FILESTORE_DIR/filestore/$ODOO_DATABASE" ]; then
+        ln -s "$FILESTORE_DIR/filestore/$ODOO_DATABASE" ${BACKUP_FOLDER_NAME}/filestore
+    else
+        if [ -d "$FILESTORE_DIR/$ODOO_DATABASE" ]; then
+            ln -s "$FILESTORE_DIR/$ODOO_DATABASE" ${BACKUP_FOLDER_NAME}/filestore
+        fi
+    fi
+
+    zip -rq ${BACKUP_NAME} ${BACKUP_FOLDER_NAME}
+
+    rm -rf ${BACKUP_FOLDER_NAME}
 }
 
 echo "Starting backup at $(date)"
+BACKUP_FOLDER_NAME=${ODOO_DATABASE}.$(date +%F_%H%M%S)
 BACKUP_NAME=${BACKUP_DIR}/${ODOO_DATABASE}.$(date +%F_%H%M%S).zip
 
 # check if web or sql backup

@@ -4,7 +4,13 @@ services:
     image: fbieringer/odoo-backup
     restart: always
     volumes:
+
+      # Output directory of your backups
       - ./backup:/backup
+
+      # For a sql dump backup mount the filestore into the container
+      # - odoo-web-data:/filestore
+
     environment:
 
       # Use Backup dir to redirect backup directory
@@ -21,3 +27,9 @@ services:
 
       # Schedule for your backups
       - SCHEDULE=*/30 * * * *
+
+      # Use DB Parameters to start direct sql dump
+      # - DB_HOST=db
+      # - DB_USER=odoo
+      # - DB_PASSWORD=odoo
+      # - ODOO_DATABASE=odoo
