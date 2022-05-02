@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-RUN apk add --no-cache tini curl
+RUN apk add --no-cache tini curl zip postgresql-client
 
 ENV BACKUP_DIR=/backup
 ENV ODOO_DATABASE=odoo
