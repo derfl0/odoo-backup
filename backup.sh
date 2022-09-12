@@ -66,9 +66,9 @@ function create_db_backup() {
     rm -rf ${BACKUP_FOLDER_NAME}
 }
 
-function restore_db_backup {
+# function restore_db_backup {
 
-}
+# }
 
 echo "Starting backup at $(date)"
 BACKUP_FOLDER_NAME=${ODOO_DATABASE}.$(date +%F_%H%M%S)
@@ -95,6 +95,6 @@ if [ ! -z "$RESTORE_URL" ] ; then
     restore_web_backup
 fi
 
-if [ ! -z "$RESTORE_DB" ] ; then
-    restore_db_backup
-fi
+# if [ ! -z "$RESTORE_DB" ] ; then
+#     restore_db_backup
+# fi
