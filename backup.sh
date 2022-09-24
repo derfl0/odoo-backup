@@ -51,6 +51,7 @@ function create_db_backup() {
     pg_dump \
         --user ${DB_USER} \
         --host ${DB_HOST} \
+        --format=custom \
         ${ODOO_DATABASE} > ${BACKUP_FOLDER_NAME}/dump.sql
 
     if [ -d "$FILESTORE_DIR/filestore/$ODOO_DATABASE" ]; then
@@ -61,16 +62,59 @@ function create_db_backup() {
         ln -s "$FILESTORE_DIR/.local/share/Odoo/filestore/$ODOO_DATABASE" ${BACKUP_FOLDER_NAME}/filestore
     fi
 
-    zip -rq ${BACKUP_NAME} ${BACKUP_FOLDER_NAME}
+    cd ${BACKUP_FOLDER_NAME}
+    zip -rq ${BACKUP_NAME} .
 
     rm -rf ${BACKUP_FOLDER_NAME}
 }
 
-# function restore_db_backup {
+function restore_db_backup {
+    echo "Restore via SQL access"
 
-# }
+    # find latest backup
+    BACKUP_FILE=$(ls -t ${BACKUP_DIR%/}/*.zip | head -1)
+    # BACKUP_PATH="${BACKUP_DIR}/${BACKUP_FILE}"
+
+    echo "Will restore $BACKUP_FILE"
+
+    # find filestore backup
+    if [ -d "$FILESTORE_DIR/filestore/$RESTORE_DB" ]; then
+        
+        RESTORE_FILE_DIR="$FILESTORE_DIR/filestore/$RESTORE_DB"
+    elif [ -d "$FILESTORE_DIR/$RESTORE_DB" ]; then
+        RESTORE_FILE_DIR="$FILESTORE_DIR/$RESTORE_DB"
+    elif [ -d "$FILESTORE_DIR/.local/share/Odoo/filestore/$RESTORE_DB" ]; then
+        RESTORE_FILE_DIR="$FILESTORE_DIR/.local/share/Odoo/filestore/$RESTORE_DB"
+    fi
+
+    if [ -z $RESTORE_FILE_DIR ]; then
+        echo "Failed to identify filestore directory"
+        return
+    fi
+
+    echo "Will unzip to: $RESTORE_FILE_DIR"
+
+    unzip -oq $BACKUP_FILE -d $RESTORE_FILE_DIR
+
+    export PGPASSWORD="${RESTORE_PASSWORD}"
+
+    echo "Will restore sql: $RESTORE_FILE_DIR/dump.sql"
+
+    # Restore postgres
+    pg_restore \
+        --clean \
+        --if-exists \
+        --single-transaction \
+        --user ${RESTORE_USER} \
+        --host ${RESTORE_HOST} \
+        --dbname ${RESTORE_DB} < ${RESTORE_FILE_DIR}/dump.sql
+
+    # Remove dump
+    rm $RESTORE_FILE_DIR/dump.sql
+}
 
 echo "Starting backup at $(date)"
+cd $BACKUP_DIR
 BACKUP_FOLDER_NAME=${ODOO_DATABASE}.$(date +%F_%H%M%S)
 BACKUP_NAME=${BACKUP_DIR}/${ODOO_DATABASE}.$(date +%F_%H%M%S).zip
 
@@ -90,11 +134,13 @@ if [ ! -z "$DELETE_AFTER" ]  && [ "$DELETE_AFTER" -gt 0 ] ; then
     find ${BACKUP_DIR} -type f -mtime +${DELETE_AFTER} -name "${ODOO_DATABASE}.*.zip" -delete
 fi
 
+cd $BACKUP_DIR
+
 # If we want to restore the database as well
 if [ ! -z "$RESTORE_URL" ] ; then
     restore_web_backup
 fi
 
-# if [ ! -z "$RESTORE_DB" ] ; then
-#     restore_db_backup
-# fi
+if [ ! -z "$RESTORE_DB" ] ; then
+    restore_db_backup
+fi
