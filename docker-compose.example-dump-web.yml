@@ -1,0 +1,18 @@
+version: '3'
+services:
+  backup:
+    image: fbieringer/odoo-backup
+    restart: always
+    volumes:
+      - ./backup:/backup
+    environment:
+      # Name of the odoo database you want to backup
+      ODOO_DATABASE: odoo
+      # Master password for the instance
+      ADMIN_PASSWORD: admin
+      # URL where your odoo is available
+      URL: https://odoo.example.com
+      # Schedule for your backups according to cron ( https://en.wikipedia.org/wiki/Cron )
+      SCHEDULE: "*/30 * * * *"
+      # Delete older backups
+      DELETE_AFTER: 14

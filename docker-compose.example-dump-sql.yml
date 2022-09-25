@@ -1,0 +1,23 @@
+version: '3'
+services:
+  backup:
+    image: fbieringer/odoo-backup
+    restart: always
+    volumes:
+      - ./backup:/backup
+
+      # Volume or mountpoint that contains the filestore
+      - odoo-web-data:/filestore
+    environment:
+      # Name of the odoo database you want to backup
+      ODOO_DATABASE: odoo
+      # Database host
+      DB_HOST: db
+      # Database user
+      DB_USER: postgres
+      # Database password
+      DB_PASSWORD: postgres
+      # Schedule for your backups according to cron ( https://en.wikipedia.org/wiki/Cron )
+      SCHEDULE: "*/30 * * * *"
+      # Delete older backups
+      DELETE_AFTER: 14
