@@ -97,6 +97,8 @@ function restore_db_backup {
 
     unzip -X -oq $BACKUP_FILE -d $RESTORE_FILE_DIR
 
+    chown -R 101:101 $RESTORE_FILE_DIR
+
     export PGPASSWORD="${RESTORE_PASSWORD}"
 
     echo "Will restore sql: $RESTORE_FILE_DIR/dump.sql"
