@@ -65,6 +65,7 @@ function create_db_backup() {
     cd ${BACKUP_FOLDER_NAME}
     zip -rq ${BACKUP_NAME} .
 
+    cd $BACKUP_DIR
     rm -rf ${BACKUP_FOLDER_NAME}
 }
 
