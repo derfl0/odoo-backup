@@ -95,7 +95,7 @@ function restore_db_backup {
 
     echo "Will unzip to: $RESTORE_FILE_DIR"
 
-    unzip -oq $BACKUP_FILE -d $RESTORE_FILE_DIR
+    unzip -X -oq $BACKUP_FILE -d $RESTORE_FILE_DIR
 
     export PGPASSWORD="${RESTORE_PASSWORD}"
 
