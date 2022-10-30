@@ -79,12 +79,11 @@ function restore_db_backup {
     echo "Will restore $BACKUP_FILE"
 
     # find filestore backup
-    if [ -d "$FILESTORE_DIR/filestore/$RESTORE_DB" ]; then
-        
+    if [ -d "$FILESTORE_DIR/filestore" ]; then
         RESTORE_FILE_DIR="$FILESTORE_DIR/filestore/$RESTORE_DB"
     elif [ -d "$FILESTORE_DIR/$RESTORE_DB" ]; then
         RESTORE_FILE_DIR="$FILESTORE_DIR/$RESTORE_DB"
-    elif [ -d "$FILESTORE_DIR/.local/share/Odoo/filestore/$RESTORE_DB" ]; then
+    elif [ -d "$FILESTORE_DIR/.local/share/Odoo/filestore" ]; then
         RESTORE_FILE_DIR="$FILESTORE_DIR/.local/share/Odoo/filestore/$RESTORE_DB"
     fi
 
@@ -95,25 +94,27 @@ function restore_db_backup {
 
     echo "Will unzip to: $RESTORE_FILE_DIR"
 
-    unzip -X -oq $BACKUP_FILE -d $RESTORE_FILE_DIR
+    # purge filedir
+    rm -rf $RESTORE_FILE_DIR
+
+    unzip -X -oq $BACKUP_FILE "filestore/*" -d $RESTORE_FILE_DIR
 
     chown -R 101:101 $RESTORE_FILE_DIR
+
+    # Fix path
+    mv $RESTORE_FILE_DIR/filestore/* $RESTORE_FILE_DIR
+    rmdir $RESTORE_FILE_DIR/filestore
 
     export PGPASSWORD="${RESTORE_PASSWORD}"
 
     echo "Will restore sql: $RESTORE_FILE_DIR/dump.sql"
 
     # Restore postgres
-    pg_restore \
+    unzip -p $BACKUP_FILE "dump.sql" | pg_restore \
         --clean \
-        --if-exists \
-        --single-transaction \
         --user ${RESTORE_USER} \
         --host ${RESTORE_HOST} \
-        --dbname ${RESTORE_DB} < ${RESTORE_FILE_DIR}/dump.sql
-
-    # Remove dump
-    rm $RESTORE_FILE_DIR/dump.sql
+        --dbname ${RESTORE_DB}
 }
 
 echo "Starting backup at $(date)"
