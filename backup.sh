@@ -88,8 +88,9 @@ function restore_db_backup {
     fi
 
     if [ -z $RESTORE_FILE_DIR ]; then
-        echo "Failed to identify filestore directory"
-        return
+        echo "Failed to identify filestore directory. Try to create"
+        RESTORE_FILE_DIR="$FILESTORE_DIR/filestore/$RESTORE_DB"
+        mkdir -p $RESTORE_FILE_DIR
     fi
 
     echo "Will unzip to: $RESTORE_FILE_DIR"
