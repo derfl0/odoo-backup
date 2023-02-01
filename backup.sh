@@ -52,6 +52,7 @@ function create_db_backup() {
         --user ${DB_USER} \
         --host ${DB_HOST} \
         --format=custom \
+        --serializable-deferrable \
         ${ODOO_DATABASE} > ${BACKUP_FOLDER_NAME}/dump.sql
 
     if [ -d "$FILESTORE_DIR/filestore/$ODOO_DATABASE" ]; then
@@ -113,6 +114,8 @@ function restore_db_backup {
     # Restore postgres
     unzip -p $BACKUP_FILE "dump.sql" | pg_restore \
         --clean \
+        --if-exists \
+        --single-transaction \
         --user ${RESTORE_USER} \
         --host ${RESTORE_HOST} \
         --dbname ${RESTORE_DB}
