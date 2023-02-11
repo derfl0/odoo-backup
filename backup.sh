@@ -111,11 +111,14 @@ function restore_db_backup {
 
     echo "Will restore sql: $RESTORE_FILE_DIR/dump.sql"
 
+    # Recreate database to avoid problems with contrains
+    dropdb --host ${RESTORE_HOST} --user ${RESTORE_USER} ${RESTORE_DB}
+    createdb --host ${RESTORE_HOST} --user ${RESTORE_USER} -T template0 ${RESTORE_DB}
+
     # Restore postgres
     unzip -p $BACKUP_FILE "dump.sql" | pg_restore \
         --clean \
         --if-exists \
-        --single-transaction \
         --user ${RESTORE_USER} \
         --host ${RESTORE_HOST} \
         --dbname ${RESTORE_DB}
