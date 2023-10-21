@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-function create_web_backup() {
+function create_web_backup () {
     echo "Backup via web"
 
     # create a backup
@@ -12,7 +12,7 @@ function create_web_backup() {
         ${URL}/web/database/backup
 }
 
-function restore_web_backup() {
+function restore_web_backup () {
 
     echo "Restoring backup"
 
@@ -41,87 +41,24 @@ function restore_web_backup() {
     echo "Restoring backup completed"
 }
 
-function create_db_backup() {
-    echo "Backup via SQL access"
+function create_db_backup () {
+    echo "Backup via Odoo access"
 
     export PGPASSWORD="${DB_PASSWORD}"
+    odoo db --db_host ${DB_HOST} -r ${DB_USER} -w ${DB_PASSWORD} dump ${ODOO_DATABASE} ${BACKUP_NAME}
 
-    mkdir ${BACKUP_FOLDER_NAME}
-
-    pg_dump \
-        --user ${DB_USER} \
-        --host ${DB_HOST} \
-        --format=custom \
-        --serializable-deferrable \
-        ${ODOO_DATABASE} > ${BACKUP_FOLDER_NAME}/dump.sql
-
-    if [ -d "$FILESTORE_DIR/filestore/$ODOO_DATABASE" ]; then
-        ln -s "$FILESTORE_DIR/filestore/$ODOO_DATABASE" ${BACKUP_FOLDER_NAME}/filestore
-    elif [ -d "$FILESTORE_DIR/$ODOO_DATABASE" ]; then
-        ln -s "$FILESTORE_DIR/$ODOO_DATABASE" ${BACKUP_FOLDER_NAME}/filestore
-    elif [ -d "$FILESTORE_DIR/.local/share/Odoo/filestore/$ODOO_DATABASE" ]; then
-        ln -s "$FILESTORE_DIR/.local/share/Odoo/filestore/$ODOO_DATABASE" ${BACKUP_FOLDER_NAME}/filestore
-    fi
-
-    cd ${BACKUP_FOLDER_NAME}
-    zip -rq ${BACKUP_NAME} .
-
-    cd $BACKUP_DIR
-    rm -rf ${BACKUP_FOLDER_NAME}
 }
 
-function restore_db_backup {
-    echo "Restore via SQL access"
+function restore_db_backup () {
+    echo "Restore via Odoo access"
 
     # find latest backup
     BACKUP_FILE=$(ls -t ${BACKUP_DIR%/}/*.zip | head -1)
     # BACKUP_PATH="${BACKUP_DIR}/${BACKUP_FILE}"
 
     echo "Will restore $BACKUP_FILE"
+    odoo db --db_host ${RESTORE_HOST} -r ${RESTORE_USER} -w ${RESTORE_PASSWORD} load --force ${RESTORE_DB} ${BACKUP_FILE}
 
-    # find filestore backup
-    if [ -d "$FILESTORE_DIR/filestore" ]; then
-        RESTORE_FILE_DIR="$FILESTORE_DIR/filestore/$RESTORE_DB"
-    elif [ -d "$FILESTORE_DIR/$RESTORE_DB" ]; then
-        RESTORE_FILE_DIR="$FILESTORE_DIR/$RESTORE_DB"
-    elif [ -d "$FILESTORE_DIR/.local/share/Odoo/filestore" ]; then
-        RESTORE_FILE_DIR="$FILESTORE_DIR/.local/share/Odoo/filestore/$RESTORE_DB"
-    fi
-
-    if [ -z $RESTORE_FILE_DIR ]; then
-        echo "Failed to identify filestore directory. Try to create"
-        RESTORE_FILE_DIR="$FILESTORE_DIR/filestore/$RESTORE_DB"
-        mkdir -p $RESTORE_FILE_DIR
-    fi
-
-    echo "Will unzip to: $RESTORE_FILE_DIR"
-
-    # purge filedir
-    rm -rf $RESTORE_FILE_DIR
-
-    unzip -X -oq $BACKUP_FILE "filestore/*" -d $RESTORE_FILE_DIR
-
-    chown -R 101:101 $RESTORE_FILE_DIR
-
-    # Fix path
-    mv $RESTORE_FILE_DIR/filestore/* $RESTORE_FILE_DIR
-    rmdir $RESTORE_FILE_DIR/filestore
-
-    export PGPASSWORD="${RESTORE_PASSWORD}"
-
-    echo "Will restore sql: $RESTORE_FILE_DIR/dump.sql"
-
-    # Recreate database to avoid problems with contrains
-    dropdb --host ${RESTORE_HOST} --user ${RESTORE_USER} ${RESTORE_DB}
-    createdb --host ${RESTORE_HOST} --user ${RESTORE_USER} -T template0 ${RESTORE_DB}
-
-    # Restore postgres
-    unzip -p $BACKUP_FILE "dump.sql" | pg_restore \
-        --clean \
-        --if-exists \
-        --user ${RESTORE_USER} \
-        --host ${RESTORE_HOST} \
-        --dbname ${RESTORE_DB}
 }
 
 echo "Starting backup at $(date)"

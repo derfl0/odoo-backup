@@ -1,15 +1,12 @@
-FROM alpine:latest
-
-RUN apk add --no-cache tini curl zip postgresql-client
+FROM odoo:16.0
 
 ENV BACKUP_DIR=/backup
-# ENV ODOO_DATABASE=odoo
-# ENV ADMIN_PASSWORD=admin
-# ENV URL=localhost:8069
-#ENV SCHEDULE="*/30 * * * *"
-ENV FILESTORE_DIR=/filestore
 
-ADD *.sh /scripts/
+USER root
+
+ADD --chown=odoo:odoo *.sh /scripts/
 RUN chmod a+x /scripts/*
 
-ENTRYPOINT ["/sbin/tini", "--", "/scripts/entry.sh"]
+USER odoo
+
+ENTRYPOINT ["/scripts/entry.sh"]
