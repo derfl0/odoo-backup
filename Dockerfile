@@ -4,9 +4,12 @@ ENV BACKUP_DIR=/backup
 
 USER root
 
-ADD --chown=odoo:odoo *.sh /scripts/
+RUN apt-get update && apt-get install -y \
+    cron \
+    tini \
+    && rm -rf /var/lib/apt/lists/*
+
+ADD *.sh /scripts/
 RUN chmod a+x /scripts/*
 
-USER odoo
-
-ENTRYPOINT ["/scripts/entry.sh"]
+ENTRYPOINT ["tini", "--", "/scripts/entry.sh"]

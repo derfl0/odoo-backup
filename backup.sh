@@ -92,3 +92,5 @@ fi
 if [ ! -z "$RESTORE_DB" ] ; then
     restore_db_backup
 fi
+
+echo "Done"
